@@ -1,0 +1,1997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BASIX IP-Marketplace</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.7.3/web3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary-color: #ec4899;
+            --accent-color: #f59e0b;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --warning-color: #f59e0b;
+            --background-color: #0f0f23;
+            --surface-color: #1e1e3f;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --border-color: #374151;
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        .background-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(-45deg, #0f0f23, #1e1e3f, #2d1b69, #1e1e3f);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Navigation */
+        .navbar {
+            background: rgba(30, 30, 63, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--gradient-primary);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .wallet-connect {
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+
+        .wallet-connect:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+            background: var(--gradient-primary);
+            margin: -2rem -2rem 4rem -2rem;
+            border-radius: 0 0 2rem 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        /* Dashboard Grid */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .card {
+            background: var(--surface-color);
+            border-radius: 1rem;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Asset Grid */
+        .asset-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .asset-card {
+            background: var(--surface-color);
+            border-radius: 1rem;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .asset-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        .asset-image {
+            width: 100%;
+            height: 200px;
+            background: var(--gradient-secondary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .asset-image::after {
+            content: '🎨';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+        }
+
+        .asset-info {
+            padding: 1.5rem;
+        }
+
+        .asset-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .asset-creator {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .asset-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .asset-ownership {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .ownership-tag {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--primary-color);
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+        }
+
+        /* Forms */
+        .form-section {
+            background: var(--surface-color);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 1px solid var(--border-color);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--error-color);
+            color: white;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab {
+            padding: 1rem 2rem;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            backdrop-filter: blur(10px);
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--surface-color);
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: var(--success-color);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 3000;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background: var(--error-color);
+        }
+
+        .notification.warning {
+            background: var(--warning-color);
+        }
+
+        /* Analytics Charts */
+        .chart-container {
+            background: var(--surface-color);
+            border-radius: 1rem;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            margin: 2rem 0;
+        }
+
+        /* Stake Card */
+        .stake-card {
+            background: var(--surface-color);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .stake-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .stake-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .stake-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success-color);
+        }
+
+        .status-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning-color);
+        }
+
+        .status-completed {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--primary-color);
+        }
+
+        /* Progress bar */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--background-color);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-primary);
+            transition: width 0.3s ease;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-container {
+                padding: 0 1rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .asset-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Utility Classes */
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .mb-1 { margin-bottom: 0.5rem; }
+        .mb-2 { margin-bottom: 1rem; }
+        .mb-3 { margin-bottom: 2rem; }
+        .mt-1 { margin-top: 0.5rem; }
+        .mt-2 { margin-top: 1rem; }
+        .mt-3 { margin-top: 2rem; }
+        .hidden { display: none; }
+        .visible { display: block; }
+    </style>
+</head>
+<body>
+    <div class="background-animation"></div>
+    
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">BASIX Marketplace</div>
+            <ul class="nav-links">
+                <li><a href="#" onclick="showTab('marketplace')">Marketplace</a></li>
+                <li><a href="#" onclick="showTab('create')">Create</a></li>
+                <li><a href="#" onclick="showTab('portfolio')">Portfolio</a></li>
+                <li><a href="#" onclick="showTab('analytics')">Analytics</a></li>
+                <li><a href="#" onclick="showTab('staking')">Staking</a></li>
+            </ul>
+            <button class="wallet-connect" onclick="connectWallet()" id="walletButton">
+                Connect Wallet
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-content">
+                <h1>AI-Native IP Marketplace</h1>
+                <p>Powered by MeTTa's symbolic AI for intelligent asset management, collaborative ownership, and autonomous pricing. Connecting local creators with global opportunities.</p>
+            </div>
+        </section>
+
+        <!-- Dashboard Stats -->
+        <div class="dashboard" id="dashboardStats">
+            <div class="card">
+                <h3>Total Assets</h3>
+                <div class="stat-value" id="totalAssets">124</div>
+            </div>
+            <div class="card">
+                <h3>Active Creators</h3>
+                <div class="stat-value" id="totalCreators">89</div>
+            </div>
+            <div class="card">
+                <h3>Total Volume</h3>
+                <div class="stat-value" id="totalVolume">1,247 ETH</div>
+            </div>
+            <div class="card">
+                <h3>My Portfolio Value</h3>
+                <div class="stat-value" id="portfolioValue">12.5 ETH</div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('marketplace')">Marketplace</button>
+            <button class="tab" onclick="showTab('create')">Create Asset</button>
+            <button class="tab" onclick="showTab('portfolio')">My Portfolio</button>
+            <button class="tab" onclick="showTab('analytics')">Analytics</button>
+            <button class="tab" onclick="showTab('staking')">Staking</button>
+        </div>
+
+        <!-- Marketplace Tab -->
+        <div id="marketplace" class="tab-content active">
+            <div class="form-section">
+                <h3>Asset Filters</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div class="form-group">
+                        <label>Asset Type</label>
+                        <select class="form-select" id="filterType" onchange="filterAssets()">
+                            <option value="">All Types</option>
+                            <option value="NFT">NFT</option>
+                            <option value="Phygital">Phygital</option>
+                            <option value="Digital">Digital</option>
+                            <option value="RealWorldAsset">Real World Asset</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Price Range</label>
+                        <input type="range" class="form-input" id="priceRange" min="0" max="10" step="0.1" oninput="filterAssets()">
+                        <span id="priceRangeValue">0 - 10 ETH</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Region</label>
+                        <select class="form-select" id="filterRegion" onchange="filterAssets()">
+                            <option value="">All Regions</option>
+                            <option value="Mumbai">Mumbai</option>
+                            <option value="Delhi">Delhi</option>
+                            <option value="Bangalore">Bangalore</option>
+                            <option value="Global">Global</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="asset-grid" id="assetGrid">
+                <!-- Assets will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Create Asset Tab -->
+        <div id="create" class="tab-content">
+            <div class="form-section">
+                <h3>Create New Asset</h3>
+                <form id="createAssetForm" onsubmit="createAsset(event)">
+                    <div class="form-group">
+                        <label>Asset Name</label>
+                        <input type="text" class="form-input" name="name" required>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label>Asset Type</label>
+                            <select class="form-select" name="asset_type" required>
+                                <option value="NFT">NFT</option>
+                                <option value="Phygital">Phygital Asset</option>
+                                <option value="Digital">Digital Asset</option>
+                                <option value="RealWorldAsset">Real World Asset</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Price (ETH)</label>
+                            <input type="number" class="form-input" name="price" step="0.001" min="0" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Royalty Rate (%)</label>
+                        <input type="number" class="form-input" name="royalty_rate" min="0" max="50" value="10">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea class="form-textarea" name="description" rows="4"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Utility Features</label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.5rem; margin-top: 0.5rem;">
+                            <label><input type="checkbox" name="utility" value="streaming_rights"> Streaming Rights</label>
+                            <label><input type="checkbox" name="utility" value="revenue_share"> Revenue Share</label>
+                            <label><input type="checkbox" name="utility" value="exclusive_access"> Exclusive Access</label>
+                            <label><input type="checkbox" name="utility" value="commercial_license"> Commercial License</label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Create Asset</button>
+                </form>
+            </div>
+
+            <div class="form-section">
+                <h3>Create Collaborative Asset</h3>
+                <form id="createCollaborativeForm" onsubmit="createCollaborativeAsset(event)">
+                    <div class="form-group">
+                        <label>Asset Name</label>
+                        <input type="text" class="form-input" name="name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Collaborators & Ownership</label>
+                        <div id="collaboratorsList">
+                            <div class="collaborator-input" style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 1rem; margin-bottom: 1rem;">
+                                <input type="text" class="form-input" placeholder="Creator ID or Wallet" name="collaborator_id[]" required>
+                                <input type="number" class="form-input" placeholder="Ownership %" name="ownership[]" min="0" max="100" required>
+                                <button type="button" class="btn btn-danger" onclick="removeCollaborator(this)">Remove</button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary" onclick="addCollaborator()">Add Collaborator</button>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label>Asset Type</label>
+                            <select class="form-select" name="asset_type" required>
+                                <option value="NFT">NFT</option>
+                                <option value="Phygital">Phygital Asset</option>
+                                <option value="Digital">Digital Asset</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Price (ETH)</label>
+                            <input type="number" class="form-input" name="price" step="0.001" min="0" required>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Create Collaborative Asset</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Portfolio Tab -->
+        <div id="portfolio" class="tab-content">
+            <div class="dashboard">
+                <div class="card">
+                    <h3>My Assets</h3>
+                    <div class="stat-value" id="myAssetsCount">7</div>
+                </div>
+                <div class="card">
+                    <h3>Total Earnings</h3>
+                    <div class="stat-value" id="totalEarnings">8.3 ETH</div>
+                </div>
+                <div class="card">
+                    <h3>Active Stakes</h3>
+                    <div class="stat-value" id="activeStakes">3</div>
+                </div>
+                <div class="card">
+                    <h3>Reputation Score</h3>
+                    <div class="stat-value" id="reputationScore">92</div>
+                </div>
+            </div>
+
+            <div class="asset-grid" id="portfolioGrid">
+                <!-- User's assets will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="analytics" class="tab-content">
+            <div class="chart-container">
+                <h3>Market Volume (30 Days)</h3>
+                <canvas id="volumeChart" width="400" height="200"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <h3>Asset Type Distribution</h3>
+                <canvas id="assetTypeChart" width="400" height="200"></canvas>
+            </div>
+            
+            <div class="dashboard">
+                <div class="card">
+                    <h3>Average Asset Price</h3>
+                    <div class="stat-value" id="avgPrice">2.8 ETH</div>
+                </div>
+                <div class="card">
+                    <h3>Transaction Count (24h)</h3>
+                    <div class="stat-value" id="transactions24h">47</div>
+                </div>
+                <div class="card">
+                    <h3>Top Creator</h3>
+                    <div class="stat-value" id="topCreator">@mumbai_artist</div>
+                </div>
+                <div class="card">
+                    <h3>Market Cap</h3>
+                    <div class="stat-value" id="marketCap">45,892 ETH</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Staking Tab -->
+        <div id="staking" class="tab-content">
+            <div class="form-section">
+                <h3>Stake Your Assets</h3>
+                <form id="stakingForm" onsubmit="stakeAsset(event)">
+                    <div class="form-group">
+                        <label>Select Asset</label>
+                        <select class="form-select" name="asset_id" id="stakingAssetSelect" required>
+                            <option value="">Select an asset to stake</option>
+                        </select>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label>Stake Amount (ETH)</label>
+                            <input type="number" class="form-input" name="amount" step="0.001" min="0.001" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Duration (Days)</label>
+                            <select class="form-select" name="duration" required>
+                                <option value="30">30 Days (12% APR)</option>
+                                <option value="90">90 Days (18% APR)</option>
+                                <option value="365">1 Year (25% APR)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Expected Returns</label>
+                        <div id="expectedReturns" class="stat-value" style="font-size: 1.5rem;">Calculate returns</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Stake Asset</button>
+                </form>
+            </div>
+            
+            <div class="form-section">
+                <h3>My Active Stakes</h3>
+                <div id="activeStakesList">
+                    <!-- Active stakes will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Asset Detail Modal -->
+    <div id="assetModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalAssetTitle">Asset Details</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modalAssetContent">
+                <!-- Asset details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification" class="notification">
+        <span id="notificationMessage"></span>
+    </div>
+
+    <script>
+        // Global variables
+        let web3;
+        let currentAccount = '';
+        let assets = [];
+        let userAssets = [];
+        let currentTab = 'marketplace';
+        let authToken = '';
+        let volumeChart, assetTypeChart;
+
+        // Mock data for demonstration
+        const mockAssets = [
+            {
+                id: '1',
+                name: 'Mumbai Street Art Collection',
+                asset_type: 'NFT',
+                price: '2.5',
+                creators: { 'artist_mumbai': 60, 'photographer_delhi': 40 },
+                utility_features: ['streaming_rights', 'commercial_license'],
+                status: 'active',
+                created_date: '2024-01-15',
+                metadata: { description: 'Vibrant street art from Mumbai\'s underground scene' },
+                current_ownership: { 'artist_mumbai': 60, 'photographer_delhi': 40 },
+                region: 'Mumbai'
+            },
+            {
+                id: '2',
+                name: 'Bangalore Tech Startup Logo',
+                asset_type: 'Digital',
+                price: '1.8',
+                creators: { 'designer_bangalore': 100 },
+                utility_features: ['commercial_license', 'exclusive_access'],
+                status: 'active',
+                created_date: '2024-02-10',
+                metadata: { description: 'Modern logo design for tech startups' },
+                current_ownership: { 'designer_bangalore': 100 },
+                region: 'Bangalore'
+            },
+            {
+                id: '3',
+                name: 'Delhi Heritage Sculpture',
+                asset_type: 'Phygital',
+                price: '4.2',
+                creators: { 'sculptor_delhi': 70, 'curator_mumbai': 30 },
+                utility_features: ['revenue_share', 'exclusive_access'],
+                status: 'active',
+                created_date: '2024-01-28',
+                metadata: { description: 'Digital twin of traditional Delhi sculpture' },
+                current_ownership: { 'sculptor_delhi': 70, 'curator_mumbai': 30 },
+                region: 'Delhi'
+            }
+        ];
+
+        const mockUserAssets = [
+            {
+                id: '1',
+                name: 'Mumbai Street Art Collection',
+                asset_type: 'NFT',
+                price: '2.5',
+                ownership_percentage: 60,
+                earnings: '3.2',
+                status: 'active'
+            }
+        ];
+
+        const mockStakes = [
+            {
+                id: 'stake_1',
+                asset_id: '1',
+                asset_name: 'Mumbai Street Art Collection',
+                amount: '1.5',
+                duration: 90,
+                apr: 18,
+                start_date: '2024-02-01',
+                status: 'active',
+                progress: 65
+            }
+        ];
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        async function initializeApp() {
+            loadDashboardStats();
+            loadAssets();
+            loadAnalytics();
+            loadUserAssets();
+            loadActiveStakes();
+            setupEventListeners();
+        }
+
+        // Event Listeners
+        function setupEventListeners() {
+            // Price range slider
+            const priceRange = document.getElementById('priceRange');
+            priceRange.addEventListener('input', function() {
+                document.getElementById('priceRangeValue').textContent = `0 - ${this.value} ETH`;
+            });
+
+            // Staking calculator
+            const stakingForm = document.getElementById('stakingForm');
+            stakingForm.addEventListener('input', calculateStakingReturns);
+
+            // Modal click outside to close
+            document.getElementById('assetModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal();
+                }
+            });
+        }
+
+        // Web3 Integration
+        async function connectWallet() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    web3 = new Web3(window.ethereum);
+                    const accounts = await window.ethereum.request({
+                        method: 'eth_requestAccounts'
+                    });
+                    
+                    currentAccount = accounts[0];
+                    document.getElementById('walletButton').textContent = 
+                        `${currentAccount.slice(0, 6)}...${currentAccount.slice(-4)}`;
+                    
+                    showNotification('Wallet connected successfully!', 'success');
+                    await loadUserData();
+                } catch (error) {
+                    console.error('Error connecting wallet:', error);
+                    showNotification('Failed to connect wallet', 'error');
+                }
+            } else {
+                showNotification('Please install MetaMask!', 'warning');
+                window.open('https://metamask.io/download/', '_blank');
+            }
+        }
+
+        // Dashboard Functions
+        function loadDashboardStats() {
+            // Using mock data - in real app, this would be API calls
+            document.getElementById('totalAssets').textContent = '124';
+            document.getElementById('totalCreators').textContent = '89';
+            document.getElementById('totalVolume').textContent = '1,247 ETH';
+            document.getElementById('portfolioValue').textContent = currentAccount ? '12.5 ETH' : '0 ETH';
+        }
+
+        function loadAssets() {
+            assets = mockAssets;
+            displayAssets(assets);
+        }
+
+        function displayAssets(assetsToDisplay) {
+            const grid = document.getElementById('assetGrid');
+            grid.innerHTML = '';
+            
+            assetsToDisplay.forEach(asset => {
+                const assetCard = createAssetCard(asset);
+                grid.appendChild(assetCard);
+            });
+        }
+
+        function createAssetCard(asset) {
+            const card = document.createElement('div');
+            card.className = 'asset-card';
+            
+            const creatorsDisplay = Object.entries(asset.creators || {})
+                .map(([creator, percentage]) => `${creator}: ${percentage}%`)
+                .join(', ');
+            
+            card.innerHTML = `
+                <div class="asset-image"></div>
+                <div class="asset-info">
+                    <div class="asset-title">${asset.name}</div>
+                    <div class="asset-creator">Creators: ${creatorsDisplay}</div>
+                    <div class="asset-price">${asset.price} ETH</div>
+                    <div class="asset-ownership">
+                        ${asset.utility_features ? asset.utility_features.map(feature => 
+                            `<span class="ownership-tag">${feature.replace('_', ' ')}</span>`
+                        ).join('') : ''}
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                        <button class="btn btn-primary" onclick="viewAssetDetails('${asset.id}')">
+                            View Details
+                        </button>
+                        <button class="btn btn-secondary" onclick="purchaseAsset('${asset.id}')">
+                            Purchase
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        // Asset Management
+        async function createAsset(event) {
+            event.preventDefault();
+            
+            if (!currentAccount) {
+                showNotification('Please connect your wallet first', 'warning');
+                return;
+            }
+            
+            const formData = new FormData(event.target);
+            const utilityFeatures = Array.from(formData.getAll('utility'));
+            
+            const assetData = {
+                name: formData.get('name'),
+                asset_type: formData.get('asset_type'),
+                price: formData.get('price'),
+                royalty_rate: parseFloat(formData.get('royalty_rate')),
+                utility_features: utilityFeatures,
+                metadata: {
+                    description: formData.get('description')
+                }
+            };
+            
+            try {
+                // Simulate API call
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                showNotification('Asset created successfully!', 'success');
+                event.target.reset();
+                loadAssets();
+                loadUserAssets();
+            } catch (error) {
+                console.error('Error creating asset:', error);
+                showNotification('Failed to create asset', 'error');
+            }
+        }
+
+        async function createCollaborativeAsset(event) {
+            event.preventDefault();
+            
+            if (!currentAccount) {
+                showNotification('Please connect your wallet first', 'warning');
+                return;
+            }
+            
+            const formData = new FormData(event.target);
+            const collaboratorIds = formData.getAll('collaborator_id[]');
+            const ownerships = formData.getAll('ownership[]').map(o => parseFloat(o));
+            
+            // Validate total ownership
+            const totalOwnership = ownerships.reduce((sum, o) => sum + o, 0);
+            if (Math.abs(totalOwnership - 100) > 0.001) {
+                showNotification('Total ownership must equal 100%', 'error');
+                return;
+            }
+            
+            const creators = {};
+            collaboratorIds.forEach((id, index) => {
+                creators[id] = ownerships[index];
+            });
+            
+            const assetData = {
+                name: formData.get('name'),
+                asset_type: formData.get('asset_type'),
+                price: formData.get('price'),
+                creators: creators
+            };
+            
+            try {
+                // Simulate API call
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                showNotification('Collaborative asset created successfully!', 'success');
+                event.target.reset();
+                loadAssets();
+            } catch (error) {
+                console.error('Error creating collaborative asset:', error);
+                showNotification('Failed to create collaborative asset', 'error');
+            }
+        }
+
+        async function viewAssetDetails(assetId) {
+            try {
+                const asset = assets.find(a => a.id === assetId);
+                if (!asset) {
+                    showNotification('Asset not found', 'error');
+                    return;
+                }
+                
+                const verification = { is_authentic: Math.random() > 0.3 };
+                
+                document.getElementById('modalAssetTitle').textContent = asset.name;
+                document.getElementById('modalAssetContent').innerHTML = `
+                    <div style="margin-bottom: 2rem;">
+                        <h4>Asset Information</h4>
+                        <p><strong>Type:</strong> ${asset.asset_type}</p>
+                        <p><strong>Price:</strong> ${asset.price} ETH</p>
+                        <p><strong>Region:</strong> ${asset.region || 'Global'}</p>
+                        <p><strong>Created:</strong> ${new Date(asset.created_date).toLocaleDateString()}</p>
+                        <p><strong>Status:</strong> ${asset.status}</p>
+                        <p><strong>Verified:</strong> ${verification.is_authentic ? '✅ Authentic' : '❌ Unverified'}</p>
+                        <p><strong>Description:</strong> ${asset.metadata?.description || 'No description available'}</p>
+                    </div>
+                    
+                    <div style="margin-bottom: 2rem;">
+                        <h4>Current Ownership</h4>
+                        ${Object.entries(asset.current_ownership || {}).map(([creator, percentage]) => 
+                            `<p>${creator}: ${percentage}%</p>`
+                        ).join('')}
+                    </div>
+                    
+                    <div style="margin-bottom: 2rem;">
+                        <h4>Utility Features</h4>
+                        ${asset.utility_features ? asset.utility_features.map(feature => 
+                            `<span class="ownership-tag">${feature.replace('_', ' ')}</span>`
+                        ).join(' ') : 'No utility features'}
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem;">
+                        <button class="btn btn-primary" onclick="purchaseAsset('${assetId}')">
+                            Purchase Asset
+                        </button>
+                        <button class="btn btn-secondary" onclick="closeModal()">
+                            Close
+                        </button>
+                    </div>
+                `;
+                
+                document.getElementById('assetModal').classList.add('active');
+            } catch (error) {
+                console.error('Error loading asset details:', error);
+                showNotification('Failed to load asset details', 'error');
+            }
+        }
+
+        async function purchaseAsset(assetId) {
+            if (!currentAccount) {
+                showNotification('Please connect your wallet first', 'warning');
+                return;
+            }
+            
+            try {
+                const asset = assets.find(a => a.id === assetId);
+                if (!asset) {
+                    showNotification('Asset not found', 'error');
+                    return;
+                }
+
+                // Simulate blockchain transaction
+                showNotification('Processing transaction...', 'warning');
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                if (Math.random() > 0.1) { // 90% success rate
+                    showNotification(`Successfully purchased ${asset.name}!`, 'success');
+                    closeModal();
+                    loadUserAssets();
+                } else {
+                    showNotification('Transaction failed. Please try again.', 'error');
+                }
+            } catch (error) {
+                console.error('Error purchasing asset:', error);
+                showNotification('Failed to purchase asset', 'error');
+            }
+        }
+
+        // Filter Functions
+        function filterAssets() {
+            const typeFilter = document.getElementById('filterType').value;
+            const priceFilter = parseFloat(document.getElementById('priceRange').value);
+            const regionFilter = document.getElementById('filterRegion').value;
+            
+            let filteredAssets = assets.filter(asset => {
+                const matchesType = !typeFilter || asset.asset_type === typeFilter;
+                const matchesPrice = parseFloat(asset.price) <= priceFilter;
+                const matchesRegion = !regionFilter || asset.region === regionFilter;
+                
+                return matchesType && matchesPrice && matchesRegion;
+            });
+            
+            displayAssets(filteredAssets);
+        }
+
+        // Portfolio Functions
+        function loadUserAssets() {
+            if (!currentAccount) {
+                document.getElementById('portfolioGrid').innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Connect your wallet to view your portfolio</p>';
+                return;
+            }
+            
+            const portfolioGrid = document.getElementById('portfolioGrid');
+            portfolioGrid.innerHTML = '';
+            
+            // Update stats
+            document.getElementById('myAssetsCount').textContent = mockUserAssets.length;
+            document.getElementById('totalEarnings').textContent = '8.3 ETH';
+            document.getElementById('activeStakes').textContent = mockStakes.filter(s => s.status === 'active').length;
+            document.getElementById('reputationScore').textContent = '92';
+            
+            mockUserAssets.forEach(asset => {
+                const assetCard = document.createElement('div');
+                assetCard.className = 'asset-card';
+                
+                assetCard.innerHTML = `
+                    <div class="asset-image"></div>
+                    <div class="asset-info">
+                        <div class="asset-title">${asset.name}</div>
+                        <div class="asset-creator">Your ownership: ${asset.ownership_percentage}%</div>
+                        <div class="asset-price">${asset.price} ETH</div>
+                        <div class="asset-ownership">
+                            <span class="ownership-tag">Earnings: ${asset.earnings} ETH</span>
+                            <span class="ownership-tag status-${asset.status}">${asset.status}</span>
+                        </div>
+                        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                            <button class="btn btn-primary" onclick="viewAssetDetails('${asset.id}')">
+                                Manage
+                            </button>
+                            <button class="btn btn-secondary" onclick="transferAsset('${asset.id}')">
+                                Transfer
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                portfolioGrid.appendChild(assetCard);
+            });
+        }
+
+        // Analytics Functions
+        function loadAnalytics() {
+            // Update stats
+            document.getElementById('avgPrice').textContent = '2.8 ETH';
+            document.getElementById('transactions24h').textContent = '47';
+            document.getElementById('topCreator').textContent = '@mumbai_artist';
+            document.getElementById('marketCap').textContent = '45,892 ETH';
+            
+            // Initialize charts
+            initializeCharts();
+        }
+
+        function initializeCharts() {
+            // Volume Chart
+            const volumeCtx = document.getElementById('volumeChart').getContext('2d');
+            volumeChart = new Chart(volumeCtx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 30}, (_, i) => `Day ${i + 1}`),
+                    datasets: [{
+                        label: 'Volume (ETH)',
+                        data: Array.from({length: 30}, () => Math.floor(Math.random() * 100) + 20),
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#ffffff' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#a1a1aa' },
+                            grid: { color: '#374151' }
+                        },
+                        y: {
+                            ticks: { color: '#a1a1aa' },
+                            grid: { color: '#374151' }
+                        }
+                    }
+                }
+            });
+
+            // Asset Type Chart
+            const assetTypeCtx = document.getElementById('assetTypeChart').getContext('2d');
+            assetTypeChart = new Chart(assetTypeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['NFT', 'Phygital', 'Digital', 'Real World Asset'],
+                    datasets: [{
+                        data: [45, 25, 20, 10],
+                        backgroundColor: [
+                            '#6366f1',
+                            '#ec4899',
+                            '#f59e0b',
+                            '#10b981'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#ffffff' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Staking Functions
+        async function stakeAsset(event) {
+            event.preventDefault();
+            
+            if (!currentAccount) {
+                showNotification('Please connect your wallet first', 'warning');
+                return;
+            }
+            
+            const formData = new FormData(event.target);
+            const stakingData = {
+                asset_id: formData.get('asset_id'),
+                amount: parseFloat(formData.get('amount')),
+                duration: parseInt(formData.get('duration'))
+            };
+            
+            try {
+                // Simulate staking transaction
+                showNotification('Processing stake...', 'warning');
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                showNotification('Asset staked successfully!', 'success');
+                event.target.reset();
+                document.getElementById('expectedReturns').textContent = 'Calculate returns';
+                loadActiveStakes();
+            } catch (error) {
+                console.error('Error staking asset:', error);
+                showNotification('Failed to stake asset', 'error');
+            }
+        }
+
+        function calculateStakingReturns() {
+            const form = document.getElementById('stakingForm');
+            const amount = parseFloat(form.amount.value) || 0;
+            const duration = parseInt(form.duration.value) || 30;
+            
+            let apr = 12; // Default APR
+            if (duration === 90) apr = 18;
+            else if (duration === 365) apr = 25;
+            
+            const returns = (amount * apr / 100) * (duration / 365);
+            const total = amount + returns;
+            
+            document.getElementById('expectedReturns').textContent = 
+                amount > 0 ? `${returns.toFixed(3)} ETH (Total: ${total.toFixed(3)} ETH)` : 'Calculate returns';
+        }
+
+        function loadActiveStakes() {
+            if (!currentAccount) {
+                document.getElementById('activeStakesList').innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Connect your wallet to view your stakes</p>';
+                return;
+            }
+            
+            const stakingAssetSelect = document.getElementById('stakingAssetSelect');
+            stakingAssetSelect.innerHTML = '<option value="">Select an asset to stake</option>';
+            
+            // Populate staking dropdown with user assets
+            mockUserAssets.forEach(asset => {
+                const option = document.createElement('option');
+                option.value = asset.id;
+                option.textContent = `${asset.name} (${asset.price} ETH)`;
+                stakingAssetSelect.appendChild(option);
+            });
+            
+            const stakesList = document.getElementById('activeStakesList');
+            stakesList.innerHTML = '';
+            
+            if (mockStakes.length === 0) {
+                stakesList.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No active stakes</p>';
+                return;
+            }
+            
+            mockStakes.forEach(stake => {
+                const stakeCard = document.createElement('div');
+                stakeCard.className = 'stake-card';
+                
+                const endDate = new Date(stake.start_date);
+                endDate.setDate(endDate.getDate() + stake.duration);
+                const daysRemaining = Math.ceil((endDate - new Date()) / (1000 * 60 * 60 * 24));
+                
+                stakeCard.innerHTML = `
+                    <div class="stake-header">
+                        <div>
+                            <h4>${stake.asset_name}</h4>
+                            <p style="color: var(--text-secondary);">Staked: ${stake.amount} ETH</p>
+                        </div>
+                        <span class="stake-status status-${stake.status}">${stake.status}</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                        <div>
+                            <p style="color: var(--text-secondary); font-size: 0.875rem;">APR</p>
+                            <p style="font-weight: 600;">${stake.apr}%</p>
+                        </div>
+                        <div>
+                            <p style="color: var(--text-secondary); font-size: 0.875rem;">Duration</p>
+                            <p style="font-weight: 600;">${stake.duration} days</p>
+                        </div>
+                        <div>
+                            <p style="color: var(--text-secondary); font-size: 0.875rem;">Remaining</p>
+                            <p style="font-weight: 600;">${Math.max(0, daysRemaining)} days</p>
+                        </div>
+                        <div>
+                            <p style="color: var(--text-secondary); font-size: 0.875rem;">Expected</p>
+                            <p style="font-weight: 600; color: var(--success-color);">+${((parseFloat(stake.amount) * stake.apr / 100) * (stake.duration / 365)).toFixed(3)} ETH</p>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${stake.progress}%"></div>
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                        <button class="btn btn-secondary" onclick="unstakeAsset('${stake.id}')">
+                            ${daysRemaining <= 0 ? 'Claim' : 'Early Unstake'}
+                        </button>
+                        <button class="btn btn-primary" onclick="viewStakeDetails('${stake.id}')">
+                            Details
+                        </button>
+                    </div>
+                `;
+                
+                stakesList.appendChild(stakeCard);
+            });
+        }
+
+        async function unstakeAsset(stakeId) {
+            try {
+                showNotification('Processing unstake...', 'warning');
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                showNotification('Asset unstaked successfully!', 'success');
+                loadActiveStakes();
+                loadUserAssets();
+            } catch (error) {
+                console.error('Error unstaking asset:', error);
+                showNotification('Failed to unstake asset', 'error');
+            }
+        }
+
+        // Collaborative Functions
+        function addCollaborator() {
+            const collaboratorsList = document.getElementById('collaboratorsList');
+            const collaboratorDiv = document.createElement('div');
+            collaboratorDiv.className = 'collaborator-input';
+            collaboratorDiv.style.cssText = 'display: grid; grid-template-columns: 2fr 1fr auto; gap: 1rem; margin-bottom: 1rem;';
+            
+            collaboratorDiv.innerHTML = `
+                <input type="text" class="form-input" placeholder="Creator ID or Wallet" name="collaborator_id[]" required>
+                <input type="number" class="form-input" placeholder="Ownership %" name="ownership[]" min="0" max="100" required>
+                <button type="button" class="btn btn-danger" onclick="removeCollaborator(this)">Remove</button>
+            `;
+            
+            collaboratorsList.appendChild(collaboratorDiv);
+        }
+
+        function removeCollaborator(button) {
+            button.parentElement.remove();
+        }
+
+        // Transfer Functions
+        async function transferAsset(assetId) {
+            const recipient = prompt('Enter recipient wallet address:');
+            if (!recipient) return;
+            
+            if (!web3.utils.isAddress(recipient)) {
+                showNotification('Invalid wallet address', 'error');
+                return;
+            }
+            
+            try {
+                showNotification('Processing transfer...', 'warning');
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                showNotification('Asset transferred successfully!', 'success');
+                loadUserAssets();
+            } catch (error) {
+                console.error('Error transferring asset:', error);
+                showNotification('Failed to transfer asset', 'error');
+            }
+        }
+
+        // Tab Management
+        function showTab(tabName) {
+            // Update active tab
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            
+            currentTab = tabName;
+            
+            // Load data specific to tab
+            if (tabName === 'portfolio') {
+                loadUserAssets();
+            } else if (tabName === 'analytics') {
+                loadAnalytics();
+            } else if (tabName === 'staking') {
+                loadActiveStakes();
+            }
+        }
+
+        // Utility Functions
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const messageElement = document.getElementById('notificationMessage');
+            
+            messageElement.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
+        }
+
+        function closeModal() {
+            document.getElementById('assetModal').classList.remove('active');
+        }
+
+        async function loadUserData() {
+            if (!currentAccount) return;
+            
+            try {
+                // Load user-specific data
+                loadUserAssets();
+                loadActiveStakes();
+                
+                // Update portfolio value
+                const portfolioValue = mockUserAssets.reduce((total, asset) => 
+                    total + parseFloat(asset.earnings || 0), 0);
+                document.getElementById('portfolioValue').textContent = `${portfolioValue.toFixed(1)} ETH`;
+                
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                showNotification('Failed to load user data', 'error');
+            }
+        }
+
+        function viewStakeDetails(stakeId) {
+            const stake = mockStakes.find(s => s.id === stakeId);
+            if (!stake) return;
+            
+            const endDate = new Date(stake.start_date);
+            endDate.setDate(endDate.getDate() + stake.duration);
+            const progress = ((new Date() - new Date(stake.start_date)) / (endDate - new Date(stake.start_date))) * 100;
+            const estimatedReturns = (parseFloat(stake.amount) * stake.apr / 100) * (stake.duration / 365);
+            
+            document.getElementById('modalAssetTitle').textContent = `Stake Details - ${stake.asset_name}`;
+            document.getElementById('modalAssetContent').innerHTML = `
+                <div style="margin-bottom: 2rem;">
+                    <h4>Stake Information</h4>
+                    <p><strong>Asset:</strong> ${stake.asset_name}</p>
+                    <p><strong>Amount Staked:</strong> ${stake.amount} ETH</p>
+                    <p><strong>APR:</strong> ${stake.apr}%</p>
+                    <p><strong>Duration:</strong> ${stake.duration} days</p>
+                    <p><strong>Start Date:</strong> ${new Date(stake.start_date).toLocaleDateString()}</p>
+                    <p><strong>End Date:</strong> ${endDate.toLocaleDateString()}</p>
+                    <p><strong>Status:</strong> ${stake.status}</p>
+                </div>
+                
+                <div style="margin-bottom: 2rem;">
+                    <h4>Returns</h4>
+                    <p><strong>Estimated Returns:</strong> <span style="color: var(--success-color);">${estimatedReturns.toFixed(3)} ETH</span></p>
+                    <p><strong>Total Expected:</strong> ${(parseFloat(stake.amount) + estimatedReturns).toFixed(3)} ETH</p>
+                    <p><strong>Progress:</strong> ${Math.min(100, progress.toFixed(1))}%</p>
+                </div>
+                
+                <div style="margin-bottom: 2rem;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${Math.min(100, progress)}%"></div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn btn-danger" onclick="unstakeAsset('${stakeId}'); closeModal();">
+                        ${progress >= 100 ? 'Claim Rewards' : 'Early Unstake (Penalty Applied)'}
+                    </button>
+                    <button class="btn btn-secondary" onclick="closeModal()">
+                        Close
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('assetModal').classList.add('active');
+        }
+
+        // Advanced Features
+        async function toggleAssetVisibility(assetId) {
+            try {
+                showNotification('Updating asset visibility...', 'warning');
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                showNotification('Asset visibility updated', 'success');
+            } catch (error) {
+                showNotification('Failed to update visibility', 'error');
+            }
+        }
+
+        async function updateAssetPrice(assetId) {
+            const newPrice = prompt('Enter new price in ETH:');
+            if (!newPrice || isNaN(parseFloat(newPrice))) {
+                showNotification('Invalid price entered', 'error');
+                return;
+            }
+            
+            try {
+                showNotification('Updating asset price...', 'warning');
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                showNotification(`Price updated to ${newPrice} ETH`, 'success');
+                loadAssets();
+                loadUserAssets();
+            } catch (error) {
+                showNotification('Failed to update price', 'error');
+            }
+        }
+
+        // AI-Powered Features (Mock Implementation)
+        async function getAIMarketInsights() {
+            const insights = [
+                "Mumbai street art is trending with 45% price increase this month",
+                "Phygital assets showing strong momentum in the Bangalore market", 
+                "Revenue-sharing NFTs have 23% higher retention rates",
+                "Cross-regional collaborations yield 38% better performance"
+            ];
+            
+            const randomInsight = insights[Math.floor(Math.random() * insights.length)];
+            showNotification(randomInsight, 'success');
+        }
+
+        async function optimizePortfolio() {
+            if (!currentAccount) {
+                showNotification('Connect wallet to optimize portfolio', 'warning');
+                return;
+            }
+            
+            showNotification('AI analyzing your portfolio...', 'warning');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            const recommendations = [
+                "Consider diversifying into Bangalore tech assets",
+                "Your Delhi heritage pieces are undervalued - hold for 15% gains",
+                "Staking duration of 90 days optimal for your risk profile"
+            ];
+            
+            const recommendation = recommendations[Math.floor(Math.random() * recommendations.length)];
+            showNotification(`AI Recommendation: ${recommendation}`, 'success');
+        }
+
+        // Enhanced Search and Discovery
+        function searchAssets(query) {
+            if (!query.trim()) {
+                displayAssets(assets);
+                return;
+            }
+            
+            const filteredAssets = assets.filter(asset => 
+                asset.name.toLowerCase().includes(query.toLowerCase()) ||
+                asset.asset_type.toLowerCase().includes(query.toLowerCase()) ||
+                (asset.metadata?.description || '').toLowerCase().includes(query.toLowerCase()) ||
+                Object.keys(asset.creators || {}).some(creator => 
+                    creator.toLowerCase().includes(query.toLowerCase())
+                )
+            );
+            
+            displayAssets(filteredAssets);
+            
+            if (filteredAssets.length === 0) {
+                document.getElementById('assetGrid').innerHTML = 
+                    '<p style="text-align: center; color: var(--text-secondary); grid-column: 1 / -1;">No assets found matching your search.</p>';
+            }
+        }
+
+        // Market Analysis Functions
+        function calculateMarketTrends() {
+            const trends = {
+                priceChange24h: (Math.random() - 0.5) * 10, // -5% to +5%
+                volumeChange24h: (Math.random() - 0.3) * 20, // Tend towards positive
+                newListings: Math.floor(Math.random() * 15) + 5,
+                uniqueTraders: Math.floor(Math.random() * 50) + 20
+            };
+            
+            return trends;
+        }
+
+        // Social Features (Mock)
+        async function followCreator(creatorId) {
+            showNotification(`Following ${creatorId}`, 'success');
+        }
+
+        async function shareAsset(assetId) {
+            if (navigator.share) {
+                try {
+                    const asset = assets.find(a => a.id === assetId);
+                    await navigator.share({
+                        title: asset.name,
+                        text: `Check out this amazing ${asset.asset_type} on BASIX Marketplace!`,
+                        url: `${window.location.origin}?asset=${assetId}`
+                    });
+                } catch (error) {
+                    console.log('Share canceled');
+                }
+            } else {
+                // Fallback - copy to clipboard
+                const asset = assets.find(a => a.id === assetId);
+                const shareUrl = `${window.location.origin}?asset=${assetId}`;
+                navigator.clipboard.writeText(shareUrl);
+                showNotification('Share link copied to clipboard!', 'success');
+            }
+        }
+
+        // Governance Features (Mock)
+        async function submitProposal() {
+            const proposal = prompt('Enter your governance proposal:');
+            if (!proposal) return;
+            
+            showNotification('Proposal submitted to DAO', 'success');
+        }
+
+        async function voteOnProposal(proposalId, vote) {
+            showNotification(`Vote "${vote}" recorded`, 'success');
+        }
+
+        // Initialize keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case '1':
+                        e.preventDefault();
+                        showTab('marketplace');
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        showTab('create');
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        showTab('portfolio');
+                        break;
+                    case '4':
+                        e.preventDefault();
+                        showTab('analytics');
+                        break;
+                    case '5':
+                        e.preventDefault();
+                        showTab('staking');
+                        break;
+                    case 'k':
+                        e.preventDefault();
+                        const searchInput = document.createElement('input');
+                        searchInput.type = 'text';
+                        searchInput.placeholder = 'Search assets...';
+                        searchInput.className = 'form-input';
+                        searchInput.style.position = 'fixed';
+                        searchInput.style.top = '50%';
+                        searchInput.style.left = '50%';
+                        searchInput.style.transform = 'translate(-50%, -50%)';
+                        searchInput.style.zIndex = '9999';
+                        searchInput.style.width = '400px';
+                        searchInput.addEventListener('keyup', function(e) {
+                            if (e.key === 'Enter') {
+                                searchAssets(this.value);
+                                this.remove();
+                            } else if (e.key === 'Escape') {
+                                this.remove();
+                            }
+                        });
+                        document.body.appendChild(searchInput);
+                        searchInput.focus();
+                        break;
+                }
+            }
+        });
+
+        // Add periodic updates for real-time feel
+        setInterval(() => {
+            if (currentTab === 'analytics') {
+                // Update some random stats to simulate real-time data
+                const currentTransactions = parseInt(document.getElementById('transactions24h').textContent);
+                if (Math.random() > 0.7) { // 30% chance to update
+                    document.getElementById('transactions24h').textContent = currentTransactions + 1;
+                }
+            }
+        }, 10000); // Every 10 seconds
+
+        // Service Worker registration for offline functionality
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                    console.log('ServiceWorker registration successful');
+                }, function(err) {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+
+        // Error boundary and logging
+        window.addEventListener('error', function(e) {
+            console.error('Global error:', e.error);
+            showNotification('An unexpected error occurred', 'error');
+        });
+
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('Unhandled promise rejection:', e.reason);
+            showNotification('Operation failed', 'error');
+            e.preventDefault();
+        });
+
+        // Initialize tooltips and help system
+        function initializeHelp() {
+            const helpButton = document.createElement('button');
+            helpButton.innerHTML = '?';
+            helpButton.className = 'btn btn-secondary';
+            helpButton.style.position = 'fixed';
+            helpButton.style.bottom = '2rem';
+            helpButton.style.right = '2rem';
+            helpButton.style.borderRadius = '50%';
+            helpButton.style.width = '50px';
+            helpButton.style.height = '50px';
+            helpButton.style.zIndex = '1000';
+            helpButton.onclick = showHelpModal;
+            document.body.appendChild(helpButton);
+        }
+
+        function showHelpModal() {
+            document.getElementById('modalAssetTitle').textContent = 'BASIX Marketplace Help';
+            document.getElementById('modalAssetContent').innerHTML = `
+                <div style="margin-bottom: 2rem;">
+                    <h4>Keyboard Shortcuts</h4>
+                    <p><strong>Ctrl/Cmd + 1-5:</strong> Switch between tabs</p>
+                    <p><strong>Ctrl/Cmd + K:</strong> Quick search</p>
+                </div>
+                
+                <div style="margin-bottom: 2rem;">
+                    <h4>Getting Started</h4>
+                    <ol>
+                        <li>Connect your MetaMask wallet</li>
+                        <li>Browse the marketplace or create your first asset</li>
+                        <li>Stake assets to earn rewards</li>
+                        <li>Collaborate with other creators</li>
+                    </ol>
+                </div>
+                
+                <div style="margin-bottom: 2rem;">
+                    <h4>Features</h4>
+                    <p><strong>AI-Powered:</strong> Get market insights and portfolio optimization</p>
+                    <p><strong>Collaborative:</strong> Create assets with multiple creators</p>
+                    <p><strong>Staking:</strong> Earn passive income on your assets</p>
+                    <p><strong>Cross-Regional:</strong> Connect local creators globally</p>
+                </div>
+                
+                <button class="btn btn-primary" onclick="closeModal()">Got it!</button>
+            `;
+            
+            document.getElementById('assetModal').classList.add('active');
+        }
+
+        // Initialize help system
+        setTimeout(initializeHelp, 1000);
+
+    </script>
+</body>
+</html>
