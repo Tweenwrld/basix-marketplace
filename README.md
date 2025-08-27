@@ -43,11 +43,26 @@ BASIX IP-Marketplace is a next-generation platform for trading intellectual prop
 ```
 BASIX IP-Marketplace/
 ├── backend/                 # Flask API backend
-│   ├── routess/            # API route handlers
+│   ├── routes/             # API route handlers (blueprints)
+│   │   ├── auth.py         # Authentication routes
+│   │   ├── assets.py       # Asset management routes
+│   │   ├── analytics.py    # Analytics routes
+│   │   └── staking.py      # Staking routes
 │   ├── ai/                 # AI and ML components
+│   │   ├── market_analysis.py      # Market analysis engine
+│   │   ├── metta_integration.py    # MeTTa integration
+│   │   └── collaboration_ai.py     # Collaboration AI
 │   ├── tasks/              # Background task processing
 │   ├── utils/              # Utility functions
-│   └── models.py           # Database models
+│   │   ├── blockchain.py   # Blockchain integration
+│   │   └── validator.py    # Input validation
+│   ├── models.py           # SQLAlchemy database models
+│   ├── main.py             # Main Flask application
+│   ├── start.py            # Startup script
+│   ├── deploy.py           # Deployment script
+│   ├── config.py           # Configuration management
+│   ├── celery_app.py       # Celery configuration
+│   └── requirements.txt    # Python dependencies
 ├── metta/                  # MeTTa knowledge base
 │   ├── market_rules.metta  # Core marketplace rules
 │   ├── collaboration.metta # Collaboration logic
@@ -60,7 +75,7 @@ BASIX IP-Marketplace/
 ## 🛠️ Technology Stack
 
 ### Backend
-- **Flask**: Web framework
+- **Flask**: Web framework with blueprint architecture
 - **SQLAlchemy**: ORM and database management
 - **Redis**: Caching and session management
 - **Celery**: Background task processing
@@ -86,10 +101,10 @@ BASIX IP-Marketplace/
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.8+
-- Node.js 16+
-- Redis
-- PostgreSQL (optional, SQLite for development)
+- Python 3.8+ (3.12 recommended)
+- Node.js 16+ (for frontend build)
+- Redis (Upstash recommended)
+- PostgreSQL (Neon recommended)
 
 ### Installation
 
@@ -102,71 +117,99 @@ BASIX IP-Marketplace/
 2. **Set up the backend**
    ```bash
    cd backend
-   python -m venv venv
+   python3 -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
+   pip install --upgrade pip
    pip install -r requirements.txt
    ```
 
 3. **Configure environment variables**
    ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
+   # Database (Neon PostgreSQL)
+   export DATABASE_URL="postgresql://<user>:<password>@<neon-host>:<port>/<db>?sslmode=require"
+   
+   # Redis (Upstash)
+   export REDIS_URL="rediss://:<upstash_password>@<upstash_host>:<port>"
+   
+   # Security
+   export SECRET_KEY="your-secret-key-change-in-production"
+   export JWT_SECRET_KEY="your-jwt-secret-change-in-production"
+   
+   # Blockchain (optional)
+   export WEB3_PROVIDER_URI="https://mainnet.infura.io/v3/<your_project_id>"
+   
+   # MeTTa
+   export METTA_ENGINE_URL="http://localhost:8080"
+   export METTA_KB_PATH="../metta"
    ```
 
-4. **Initialize the database**
+4. **Run environment checks**
    ```bash
-   python scripts/setup_database.py
+   python start.py --check-only
    ```
 
-5. **Start the development server**
+5. **Start the application**
    ```bash
-   python aapp.py
+   # Development mode
+   python start.py --mode development
+   
+   # Or use the main application directly
+   python main.py
    ```
 
 6. **Access the application**
    - Backend API: http://localhost:5000
+   - Health check: http://localhost:5000/health
+   - API docs: http://localhost:5000/api/docs
    - Frontend: http://localhost:3000
 
 ## 📚 API Documentation
 
 ### Authentication
 ```bash
-POST /auth/login
-POST /auth/register
-GET /auth/profile
-PUT /auth/update-profile
+POST /auth/login              # Login with wallet address
+POST /auth/register           # Register new creator
+GET /auth/profile             # Get user profile
+PUT /auth/update-profile      # Update user profile
 ```
 
 ### Assets
 ```bash
-GET /assets                    # List assets
-POST /assets/create           # Create asset
-POST /assets/collaborative    # Create collaborative asset
-GET /assets/{id}              # Get asset details
-POST /assets/{id}/purchase    # Purchase asset
+GET /assets                   # List all assets
+POST /assets/create          # Create new asset
+POST /assets/collaborative   # Create collaborative asset
+GET /assets/{id}             # Get asset details
+POST /assets/{id}/purchase   # Purchase asset
 POST /assets/{id}/transfer-ownership  # Transfer ownership
-GET /assets/{id}/verify       # Verify asset
+GET /assets/{id}/verify      # Verify asset
 GET /assets/{id}/predict-price # Price prediction
-GET /assets/{id}/analytics    # Asset analytics
+GET /assets/{id}/analytics   # Asset analytics
 ```
 
 ### Staking
 ```bash
-POST /staking/stake           # Stake asset
-GET /staking/stakes           # Get user stakes
-POST /staking/unstake/{id}    # Unstake asset
-GET /staking/rewards          # Get staking rewards
-POST /staking/claim-rewards   # Claim rewards
-GET /staking/pools            # Get staking pools
+POST /staking/stake          # Stake asset
+GET /staking/stakes          # Get user stakes
+POST /staking/unstake/{id}   # Unstake asset
+GET /staking/rewards         # Get staking rewards
+POST /staking/claim-rewards  # Claim rewards
+GET /staking/pools           # Get staking pools
 ```
 
 ### Analytics
 ```bash
-GET /analytics/market         # Market analytics
+GET /analytics/market        # Market analytics
 GET /analytics/assets/distribution  # Asset distribution
-GET /analytics/creators       # Creator analytics
-GET /analytics/predictions    # Market predictions
-GET /analytics/trends         # Market trends
+GET /analytics/creators      # Creator analytics
+GET /analytics/predictions   # Market predictions
+GET /analytics/trends        # Market trends
+```
+
+### System
+```bash
+GET /health                  # Health check
+GET /stats                   # System statistics
+GET /api/docs                # API documentation
 ```
 
 ## 🔧 Configuration
@@ -174,7 +217,14 @@ GET /analytics/trends         # Market trends
 ### Environment Variables
 ```bash
 # Database
-DATABASE_URL=postgresql://user:pass@localhost/basix_marketplace
+DATABASE_URL=postgresql://user:pass@neon-host:port/db?sslmode=require
+
+# Redis
+REDIS_URL=rediss://:password@upstash-host:port
+
+# Security
+SECRET_KEY=your-secret-key
+JWT_SECRET_KEY=your-jwt-secret
 
 # Blockchain
 WEB3_PROVIDER_URI=https://mainnet.infura.io/v3/YOUR_PROJECT_ID
@@ -184,32 +234,50 @@ BLOCKCHAIN_NETWORK=ethereum_mainnet
 METTA_ENGINE_URL=http://localhost:8080
 METTA_KB_PATH=../metta
 
-# Redis
-REDIS_URL=redis://localhost:6379/0
-
-# Security
-SECRET_KEY=your-secret-key
-JWT_SECRET_KEY=your-jwt-secret
-
 # Email
 EMAIL_SERVER=smtp.gmail.com
 EMAIL_USERNAME=your-email@gmail.com
 EMAIL_PASSWORD=your-app-password
 ```
 
-## 🤝 Contributing
+## 🚀 Deployment
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### Development
+```bash
+cd backend
+python start.py --mode development
+```
 
-### Development Guidelines
-- Follow PEP 8 style guidelines
-- Write comprehensive tests
-- Update documentation
-- Use conventional commit messages
+### Production
+```bash
+# Deploy to production
+python deploy.py --environment production
+
+# Start services
+python deploy.py --action start
+
+# Stop services
+python deploy.py --action stop
+
+# Restart services
+python deploy.py --action restart
+```
+
+### Using Gunicorn (Production)
+```bash
+cd backend
+gunicorn -w 4 -b 0.0.0.0:5000 main:app
+```
+
+### Using Docker
+```bash
+# Build and run with Docker Compose
+docker-compose up -d
+
+# Or build individual containers
+docker build -t basix-marketplace .
+docker run -p 5000:5000 basix-marketplace
+```
 
 ## 🧪 Testing
 
@@ -218,7 +286,7 @@ EMAIL_PASSWORD=your-app-password
 pytest
 
 # Run with coverage
-pytest --cov=backend
+pytest --cov=.
 
 # Run specific test file
 pytest tests/test_assets.py
@@ -273,26 +341,31 @@ pytest tests/integration/
 - Sentry error tracking
 - Custom analytics
 
-## 🚀 Deployment
+## 🔄 Development Workflow
 
-### Production Deployment
-```bash
-# Using Docker
-docker-compose up -d
+### Code Structure
+- **Modular Design**: Blueprint-based Flask application
+- **Separation of Concerns**: Clear separation between routes, models, and utilities
+- **AI Integration**: Dedicated AI modules for different functionalities
+- **Database Models**: Comprehensive SQLAlchemy models with relationships
 
-# Using Kubernetes
-kubectl apply -f k8s/
+### File Naming Convention
+- `main.py`: Main Flask application entry point
+- `models.py`: SQLAlchemy database models
+- `routes/`: API route blueprints
+- `ai/`: AI and machine learning components
+- `utils/`: Utility functions and helpers
+- `tasks/`: Background task processing
+- `start.py`: Application startup script
+- `deploy.py`: Deployment automation
 
-# Manual deployment
-gunicorn -w 4 -b 0.0.0.0:5000 aapp:app
-```
-
-### Environment Setup
-- Production database (PostgreSQL)
-- Redis cluster
-- Load balancer
-- SSL certificates
-- Monitoring stack
+### Key Components
+- **Application Factory**: `main.py` uses factory pattern for app creation
+- **Blueprint Architecture**: Modular route organization
+- **Database Models**: Enhanced models with relationships and methods
+- **AI Integration**: MeTTa symbolic AI and ML components
+- **Blockchain Integration**: Web3.py integration for blockchain operations
+- **Background Tasks**: Celery integration for async processing
 
 ## 📄 License
 
@@ -315,12 +388,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🔄 Changelog
 
 ### v1.0.0 (2024-01-15)
-- Initial release
-- Core marketplace functionality
-- AI-powered pricing
-- Blockchain integration
-- Staking system
-- Analytics dashboard
+- Initial release with comprehensive restructuring
+- Modular blueprint architecture
+- Enhanced database models with relationships
+- AI-powered pricing and market analysis
+- Blockchain integration for asset verification
+- Staking system with dynamic APR
+- Comprehensive analytics and insights
+- Production-ready deployment scripts
 
 ---
 

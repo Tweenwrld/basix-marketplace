@@ -7,6 +7,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.7.3/web3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -1991,6 +1994,829 @@
 
         // Initialize help system
         setTimeout(initializeHelp, 1000);
+
+        // ===== COMPREHENSIVE API INTEGRATION =====
+        
+        // API Configuration
+        const API_BASE_URL = 'http://localhost:5000';
+        const API_ENDPOINTS = {
+            auth: {
+                login: '/auth/login',
+                register: '/auth/register',
+                profile: '/auth/profile',
+                updateProfile: '/auth/update-profile'
+            },
+            assets: {
+                list: '/assets',
+                create: '/assets/create',
+                collaborative: '/assets/collaborative',
+                details: (id) => `/assets/${id}`,
+                purchase: (id) => `/assets/${id}/purchase`,
+                transfer: (id) => `/assets/${id}/transfer-ownership`,
+                verify: (id) => `/assets/${id}/verify`,
+                predictPrice: (id) => `/assets/${id}/predict-price`,
+                analytics: (id) => `/assets/${id}/analytics`
+            },
+            staking: {
+                stake: '/staking/stake',
+                stakes: '/staking/stakes',
+                unstake: (id) => `/staking/unstake/${id}`,
+                rewards: '/staking/rewards',
+                claimRewards: '/staking/claim-rewards',
+                pools: '/staking/pools'
+            },
+            analytics: {
+                market: '/analytics/market',
+                distribution: '/analytics/assets/distribution',
+                creators: '/analytics/creators',
+                predictions: '/analytics/predictions',
+                trends: '/analytics/trends'
+            },
+            system: {
+                health: '/health',
+                stats: '/stats',
+                docs: '/api/docs'
+            }
+        };
+
+        // API Service Class
+        class BASIXAPIService {
+            constructor() {
+                this.baseURL = API_BASE_URL;
+                this.token = localStorage.getItem('auth_token');
+                this.setupInterceptors();
+            }
+
+            setupInterceptors() {
+                // Request interceptor
+                axios.interceptors.request.use(
+                    (config) => {
+                        if (this.token) {
+                            config.headers.Authorization = `Bearer ${this.token}`;
+                        }
+                        config.headers['Content-Type'] = 'application/json';
+                        return config;
+                    },
+                    (error) => Promise.reject(error)
+                );
+
+                // Response interceptor
+                axios.interceptors.response.use(
+                    (response) => response,
+                    (error) => {
+                        if (error.response?.status === 401) {
+                            this.handleUnauthorized();
+                        }
+                        return Promise.reject(error);
+                    }
+                );
+            }
+
+            handleUnauthorized() {
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user_data');
+                showNotification('Session expired. Please login again.', 'error');
+                setTimeout(() => window.location.reload(), 2000);
+            }
+
+            setToken(token) {
+                this.token = token;
+                localStorage.setItem('auth_token', token);
+            }
+
+            async request(endpoint, options = {}) {
+                try {
+                    const response = await axios({
+                        url: `${this.baseURL}${endpoint}`,
+                        ...options
+                    });
+                    return response.data;
+                } catch (error) {
+                    console.error('API Error:', error);
+                    throw error;
+                }
+            }
+
+            // Authentication methods
+            async login(walletAddress) {
+                const response = await this.request(API_ENDPOINTS.auth.login, {
+                    method: 'POST',
+                    data: { wallet_address: walletAddress }
+                });
+                this.setToken(response.access_token);
+                return response;
+            }
+
+            async register(userData) {
+                return await this.request(API_ENDPOINTS.auth.register, {
+                    method: 'POST',
+                    data: userData
+                });
+            }
+
+            async getProfile() {
+                return await this.request(API_ENDPOINTS.auth.profile);
+            }
+
+            async updateProfile(profileData) {
+                return await this.request(API_ENDPOINTS.auth.updateProfile, {
+                    method: 'PUT',
+                    data: profileData
+                });
+            }
+
+            // Asset methods
+            async getAssets(filters = {}) {
+                const params = new URLSearchParams(filters);
+                return await this.request(`${API_ENDPOINTS.assets.list}?${params}`);
+            }
+
+            async createAsset(assetData) {
+                return await this.request(API_ENDPOINTS.assets.create, {
+                    method: 'POST',
+                    data: assetData
+                });
+            }
+
+            async createCollaborativeAsset(assetData) {
+                return await this.request(API_ENDPOINTS.assets.collaborative, {
+                    method: 'POST',
+                    data: assetData
+                });
+            }
+
+            async getAssetDetails(assetId) {
+                return await this.request(API_ENDPOINTS.assets.details(assetId));
+            }
+
+            async purchaseAsset(assetId, purchaseData) {
+                return await this.request(API_ENDPOINTS.assets.purchase(assetId), {
+                    method: 'POST',
+                    data: purchaseData
+                });
+            }
+
+            async transferOwnership(assetId, transferData) {
+                return await this.request(API_ENDPOINTS.assets.transfer(assetId), {
+                    method: 'POST',
+                    data: transferData
+                });
+            }
+
+            async verifyAsset(assetId) {
+                return await this.request(API_ENDPOINTS.assets.verify(assetId));
+            }
+
+            async predictAssetPrice(assetId) {
+                return await this.request(API_ENDPOINTS.assets.predictPrice(assetId));
+            }
+
+            async getAssetAnalytics(assetId) {
+                return await this.request(API_ENDPOINTS.assets.analytics(assetId));
+            }
+
+            // Staking methods
+            async stakeAsset(stakeData) {
+                return await this.request(API_ENDPOINTS.staking.stake, {
+                    method: 'POST',
+                    data: stakeData
+                });
+            }
+
+            async getUserStakes() {
+                return await this.request(API_ENDPOINTS.staking.stakes);
+            }
+
+            async unstakeAsset(stakeId) {
+                return await this.request(API_ENDPOINTS.staking.unstake(stakeId), {
+                    method: 'POST'
+                });
+            }
+
+            async getStakingRewards() {
+                return await this.request(API_ENDPOINTS.staking.rewards);
+            }
+
+            async claimRewards() {
+                return await this.request(API_ENDPOINTS.staking.claimRewards, {
+                    method: 'POST'
+                });
+            }
+
+            async getStakingPools() {
+                return await this.request(API_ENDPOINTS.staking.pools);
+            }
+
+            // Analytics methods
+            async getMarketAnalytics() {
+                return await this.request(API_ENDPOINTS.analytics.market);
+            }
+
+            async getAssetDistribution() {
+                return await this.request(API_ENDPOINTS.analytics.distribution);
+            }
+
+            async getCreatorAnalytics() {
+                return await this.request(API_ENDPOINTS.analytics.creators);
+            }
+
+            async getMarketPredictions() {
+                return await this.request(API_ENDPOINTS.analytics.predictions);
+            }
+
+            async getMarketTrends() {
+                return await this.request(API_ENDPOINTS.analytics.trends);
+            }
+
+            // System methods
+            async getHealthStatus() {
+                return await this.request(API_ENDPOINTS.system.health);
+            }
+
+            async getSystemStats() {
+                return await this.request(API_ENDPOINTS.system.stats);
+            }
+
+            async getAPIDocs() {
+                return await this.request(API_ENDPOINTS.system.docs);
+            }
+        }
+
+        // Blockchain Integration Service
+        class BlockchainService {
+            constructor() {
+                this.web3 = null;
+                this.provider = null;
+                this.account = null;
+                this.contracts = {};
+            }
+
+            async connect() {
+                if (typeof window.ethereum !== 'undefined') {
+                    try {
+                        this.provider = new ethers.providers.Web3Provider(window.ethereum);
+                        await this.provider.send("eth_requestAccounts", []);
+                        this.account = await this.provider.getSigner();
+                        this.web3 = new Web3(window.ethereum);
+                        
+                        console.log('Connected to wallet:', await this.account.getAddress());
+                        return true;
+                    } catch (error) {
+                        console.error('Failed to connect wallet:', error);
+                        return false;
+                    }
+                } else {
+                    console.error('MetaMask not found');
+                    return false;
+                }
+            }
+
+            async getBalance() {
+                if (!this.account) return 0;
+                const balance = await this.account.getBalance();
+                return ethers.utils.formatEther(balance);
+            }
+
+            async signMessage(message) {
+                if (!this.account) throw new Error('Wallet not connected');
+                return await this.account.signMessage(message);
+            }
+
+            async sendTransaction(transaction) {
+                if (!this.account) throw new Error('Wallet not connected');
+                return await this.account.sendTransaction(transaction);
+            }
+        }
+
+        // Real-time Data Service
+        class RealTimeService {
+            constructor() {
+                this.socket = null;
+                this.callbacks = {};
+                this.reconnectAttempts = 0;
+                this.maxReconnectAttempts = 5;
+            }
+
+            connect() {
+                try {
+                    this.socket = new WebSocket('ws://localhost:5000/ws');
+                    
+                    this.socket.onopen = () => {
+                        console.log('WebSocket connected');
+                        this.reconnectAttempts = 0;
+                    };
+
+                    this.socket.onmessage = (event) => {
+                        const data = JSON.parse(event.data);
+                        this.handleMessage(data);
+                    };
+
+                    this.socket.onclose = () => {
+                        console.log('WebSocket disconnected');
+                        this.attemptReconnect();
+                    };
+
+                    this.socket.onerror = (error) => {
+                        console.error('WebSocket error:', error);
+                    };
+                } catch (error) {
+                    console.error('Failed to connect WebSocket:', error);
+                }
+            }
+
+            handleMessage(data) {
+                const { type, payload } = data;
+                
+                if (this.callbacks[type]) {
+                    this.callbacks[type].forEach(callback => callback(payload));
+                }
+            }
+
+            subscribe(type, callback) {
+                if (!this.callbacks[type]) {
+                    this.callbacks[type] = [];
+                }
+                this.callbacks[type].push(callback);
+            }
+
+            unsubscribe(type, callback) {
+                if (this.callbacks[type]) {
+                    this.callbacks[type] = this.callbacks[type].filter(cb => cb !== callback);
+                }
+            }
+
+            attemptReconnect() {
+                if (this.reconnectAttempts < this.maxReconnectAttempts) {
+                    this.reconnectAttempts++;
+                    setTimeout(() => {
+                        console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+                        this.connect();
+                    }, 5000 * this.reconnectAttempts);
+                }
+            }
+        }
+
+        // AI Integration Service
+        class AIService {
+            constructor(apiService) {
+                this.api = apiService;
+            }
+
+            async getMarketInsights() {
+                try {
+                    const [marketAnalytics, predictions, trends] = await Promise.all([
+                        this.api.getMarketAnalytics(),
+                        this.api.getMarketPredictions(),
+                        this.api.getMarketTrends()
+                    ]);
+
+                    return {
+                        marketAnalytics,
+                        predictions,
+                        trends,
+                        insights: this.generateInsights(marketAnalytics, predictions, trends)
+                    };
+                } catch (error) {
+                    console.error('Failed to get market insights:', error);
+                    throw error;
+                }
+            }
+
+            generateInsights(marketAnalytics, predictions, trends) {
+                const insights = [];
+                
+                // Market sentiment analysis
+                if (marketAnalytics.market_sentiment === 'bullish') {
+                    insights.push({
+                        type: 'positive',
+                        message: 'Market sentiment is bullish - good time to list assets',
+                        confidence: 0.85
+                    });
+                }
+
+                // Volume analysis
+                if (marketAnalytics.total_volume > 10000) {
+                    insights.push({
+                        type: 'info',
+                        message: 'High trading volume indicates strong market activity',
+                        confidence: 0.9
+                    });
+                }
+
+                // Price prediction insights
+                if (predictions.price_trend === 'upward') {
+                    insights.push({
+                        type: 'opportunity',
+                        message: 'AI predicts upward price movement - consider holding assets',
+                        confidence: predictions.confidence || 0.7
+                    });
+                }
+
+                return insights;
+            }
+
+            async getPortfolioRecommendations(userAssets) {
+                try {
+                    const recommendations = [];
+                    
+                    for (const asset of userAssets) {
+                        const analytics = await this.api.getAssetAnalytics(asset.id);
+                        const prediction = await this.api.predictAssetPrice(asset.id);
+                        
+                        if (prediction.recommendation === 'sell' && prediction.confidence > 0.7) {
+                            recommendations.push({
+                                asset: asset,
+                                action: 'sell',
+                                reason: prediction.reasoning,
+                                confidence: prediction.confidence
+                            });
+                        } else if (prediction.recommendation === 'hold' && analytics.performance_score > 0.8) {
+                            recommendations.push({
+                                asset: asset,
+                                action: 'stake',
+                                reason: 'High performance asset - consider staking for rewards',
+                                confidence: analytics.performance_score
+                            });
+                        }
+                    }
+                    
+                    return recommendations;
+                } catch (error) {
+                    console.error('Failed to get portfolio recommendations:', error);
+                    throw error;
+                }
+            }
+        }
+
+        // Initialize services
+        const apiService = new BASIXAPIService();
+        const blockchainService = new BlockchainService();
+        const realTimeService = new RealTimeService();
+        const aiService = new AIService(apiService);
+
+        // Enhanced UI Controller
+        class BASIXUIController {
+            constructor() {
+                this.currentUser = null;
+                this.assets = [];
+                this.stakes = [];
+                this.analytics = {};
+                this.setupEventListeners();
+                this.initializeRealTimeUpdates();
+            }
+
+            setupEventListeners() {
+                // Wallet connection
+                document.getElementById('connectWallet').addEventListener('click', () => {
+                    this.connectWallet();
+                });
+
+                // Asset creation
+                document.getElementById('createAssetBtn').addEventListener('click', () => {
+                    this.showCreateAssetModal();
+                });
+
+                // Staking
+                document.getElementById('stakeAssetBtn').addEventListener('click', () => {
+                    this.showStakingModal();
+                });
+
+                // Real-time updates
+                realTimeService.subscribe('asset_created', (asset) => {
+                    this.handleAssetCreated(asset);
+                });
+
+                realTimeService.subscribe('transaction_completed', (transaction) => {
+                    this.handleTransactionCompleted(transaction);
+                });
+            }
+
+            async connectWallet() {
+                try {
+                    const connected = await blockchainService.connect();
+                    if (connected) {
+                        const address = await blockchainService.account.getAddress();
+                        
+                        // Login to API
+                        const loginResponse = await apiService.login(address);
+                        this.currentUser = loginResponse.user;
+                        
+                        // Update UI
+                        this.updateUserInterface();
+                        showNotification('Wallet connected successfully!', 'success');
+                        
+                        // Load user data
+                        await this.loadUserData();
+                    }
+                } catch (error) {
+                    console.error('Failed to connect wallet:', error);
+                    showNotification('Failed to connect wallet', 'error');
+                }
+            }
+
+            async loadUserData() {
+                try {
+                    const [profile, userAssets, userStakes] = await Promise.all([
+                        apiService.getProfile(),
+                        apiService.getAssets({ creator_id: this.currentUser.id }),
+                        apiService.getUserStakes()
+                    ]);
+
+                    this.currentUser = profile;
+                    this.assets = userAssets.assets || [];
+                    this.stakes = userStakes.stakes || [];
+
+                    this.updateDashboard();
+                } catch (error) {
+                    console.error('Failed to load user data:', error);
+                }
+            }
+
+            updateUserInterface() {
+                if (this.currentUser) {
+                    document.getElementById('userInfo').textContent = this.currentUser.username;
+                    document.getElementById('connectWallet').style.display = 'none';
+                    document.getElementById('userMenu').style.display = 'block';
+                }
+            }
+
+            updateDashboard() {
+                this.updateAssetList();
+                this.updateStakingInfo();
+                this.updateAnalytics();
+            }
+
+            updateAssetList() {
+                const assetList = document.getElementById('assetList');
+                assetList.innerHTML = '';
+
+                this.assets.forEach(asset => {
+                    const assetElement = this.createAssetElement(asset);
+                    assetList.appendChild(assetElement);
+                });
+            }
+
+            createAssetElement(asset) {
+                const div = document.createElement('div');
+                div.className = 'asset-card';
+                div.innerHTML = `
+                    <h3>${asset.name}</h3>
+                    <p>Type: ${asset.asset_type}</p>
+                    <p>Price: ${asset.price} ETH</p>
+                    <p>Status: ${asset.status}</p>
+                    <div class="asset-actions">
+                        <button onclick="uiController.viewAsset('${asset.id}')" class="btn btn-primary">View</button>
+                        <button onclick="uiController.editAsset('${asset.id}')" class="btn btn-secondary">Edit</button>
+                    </div>
+                `;
+                return div;
+            }
+
+            updateStakingInfo() {
+                const stakingInfo = document.getElementById('stakingInfo');
+                const totalStaked = this.stakes.reduce((sum, stake) => sum + parseFloat(stake.amount), 0);
+                const totalRewards = this.stakes.reduce((sum, stake) => sum + parseFloat(stake.total_rewards_earned), 0);
+
+                stakingInfo.innerHTML = `
+                    <h3>Staking Overview</h3>
+                    <p>Total Staked: ${totalStaked.toFixed(4)} ETH</p>
+                    <p>Total Rewards: ${totalRewards.toFixed(4)} ETH</p>
+                    <p>Active Stakes: ${this.stakes.length}</p>
+                `;
+            }
+
+            async updateAnalytics() {
+                try {
+                    const analytics = await apiService.getMarketAnalytics();
+                    this.analytics = analytics;
+                    
+                    this.updateCharts(analytics);
+                } catch (error) {
+                    console.error('Failed to update analytics:', error);
+                }
+            }
+
+            updateCharts(analytics) {
+                // Update market volume chart
+                if (window.marketVolumeChart) {
+                    window.marketVolumeChart.data.datasets[0].data = analytics.volume_data || [];
+                    window.marketVolumeChart.update();
+                }
+
+                // Update price trend chart
+                if (window.priceTrendChart) {
+                    window.priceTrendChart.data.datasets[0].data = analytics.price_data || [];
+                    window.priceTrendChart.update();
+                }
+            }
+
+            async showCreateAssetModal() {
+                document.getElementById('modalAssetTitle').textContent = 'Create New Asset';
+                document.getElementById('modalAssetContent').innerHTML = `
+                    <form id="createAssetForm">
+                        <div class="form-group">
+                            <label>Asset Name</label>
+                            <input type="text" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Asset Type</label>
+                            <select name="asset_type" required>
+                                <option value="NFT">NFT</option>
+                                <option value="Phygital">Phygital</option>
+                                <option value="Digital">Digital</option>
+                                <option value="RealWorldAsset">Real World Asset</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Price (ETH)</label>
+                            <input type="number" name="price" step="0.001" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea name="description"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create Asset</button>
+                    </form>
+                `;
+
+                document.getElementById('assetModal').classList.add('active');
+
+                // Handle form submission
+                document.getElementById('createAssetForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    await this.createAsset(e.target);
+                });
+            }
+
+            async createAsset(form) {
+                try {
+                    const formData = new FormData(form);
+                    const assetData = {
+                        name: formData.get('name'),
+                        asset_type: formData.get('asset_type'),
+                        price: parseFloat(formData.get('price')),
+                        description: formData.get('description'),
+                        creator_id: this.currentUser.id
+                    };
+
+                    const response = await apiService.createAsset(assetData);
+                    
+                    this.assets.push(response.asset);
+                    this.updateAssetList();
+                    
+                    closeModal();
+                    showNotification('Asset created successfully!', 'success');
+                } catch (error) {
+                    console.error('Failed to create asset:', error);
+                    showNotification('Failed to create asset', 'error');
+                }
+            }
+
+            async showStakingModal() {
+                document.getElementById('modalAssetTitle').textContent = 'Stake Asset';
+                document.getElementById('modalAssetContent').innerHTML = `
+                    <form id="stakingForm">
+                        <div class="form-group">
+                            <label>Select Asset</label>
+                            <select name="asset_id" required>
+                                ${this.assets.map(asset => 
+                                    `<option value="${asset.id}">${asset.name} (${asset.price} ETH)</option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Stake Amount (ETH)</label>
+                            <input type="number" name="amount" step="0.001" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Duration (days)</label>
+                            <select name="duration" required>
+                                <option value="30">30 days</option>
+                                <option value="90">90 days</option>
+                                <option value="365">365 days</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Stake Asset</button>
+                    </form>
+                `;
+
+                document.getElementById('assetModal').classList.add('active');
+
+                // Handle form submission
+                document.getElementById('stakingForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    await this.stakeAsset(e.target);
+                });
+            }
+
+            async stakeAsset(form) {
+                try {
+                    const formData = new FormData(form);
+                    const stakeData = {
+                        asset_id: formData.get('asset_id'),
+                        amount: parseFloat(formData.get('amount')),
+                        duration: parseInt(formData.get('duration'))
+                    };
+
+                    const response = await apiService.stakeAsset(stakeData);
+                    
+                    this.stakes.push(response.stake);
+                    this.updateStakingInfo();
+                    
+                    closeModal();
+                    showNotification('Asset staked successfully!', 'success');
+                } catch (error) {
+                    console.error('Failed to stake asset:', error);
+                    showNotification('Failed to stake asset', 'error');
+                }
+            }
+
+            handleAssetCreated(asset) {
+                this.assets.push(asset);
+                this.updateAssetList();
+                showNotification(`New asset created: ${asset.name}`, 'info');
+            }
+
+            handleTransactionCompleted(transaction) {
+                showNotification(`Transaction completed: ${transaction.tx_hash}`, 'success');
+                this.updateAnalytics();
+            }
+
+            initializeRealTimeUpdates() {
+                realTimeService.connect();
+            }
+        }
+
+        // Initialize UI Controller
+        const uiController = new BASIXUIController();
+
+        // Enhanced notification system
+        function showNotification(message, type = 'info', duration = 5000) {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.textContent = message;
+            
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                color: white;
+                font-weight: 500;
+                z-index: 10000;
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+                max-width: 300px;
+            `;
+
+            // Set background color based on type
+            const colors = {
+                success: '#10b981',
+                error: '#ef4444',
+                warning: '#f59e0b',
+                info: '#3b82f6'
+            };
+            notification.style.backgroundColor = colors[type] || colors.info;
+
+            document.body.appendChild(notification);
+
+            // Animate in
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+
+            // Auto remove
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, duration);
+        }
+
+        // Enhanced modal system
+        function closeModal() {
+            document.getElementById('assetModal').classList.remove('active');
+        }
+
+        // Global error handling
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Unhandled promise rejection:', event.reason);
+            showNotification('An unexpected error occurred', 'error');
+        });
+
+        // Initialize everything when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('BASIX IP-Marketplace initialized');
+            
+            // Check for existing session
+            const token = localStorage.getItem('auth_token');
+            if (token) {
+                apiService.setToken(token);
+                uiController.loadUserData();
+            }
+        });
 
     </script>
 </body>
