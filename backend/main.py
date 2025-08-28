@@ -1,5 +1,5 @@
 """
-BASIX IP-Marketplace: Main Application Entry Point
+IPheron: Main Application Entry Point
 Comprehensive Flask application with all marketplace functionality
 """
 
@@ -219,7 +219,7 @@ def create_app(config_name=None):
     with app.app_context():
         init_db(app)
     
-    logger.info(f"BASIX IP-Marketplace app created with config: {config_name}")
+    logger.info(f"IPheron app created with config: {config_name}")
     return app
 
 def run_development_server():
