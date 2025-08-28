@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BASIX IP-Marketplace</title>
+    <title>IPheron</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.7.3/web3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chart.js/3.9.1/chart.min.js"></script>
@@ -638,7 +638,7 @@
     <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-container">
-            <div class="logo">BASIX Marketplace</div>
+                            <div class="logo">IPheron</div>
             <ul class="nav-links">
                 <li><a href="#" onclick="showTab('marketplace')">Marketplace</a></li>
                 <li><a href="#" onclick="showTab('create')">Create</a></li>
@@ -1831,7 +1831,7 @@
                     const asset = assets.find(a => a.id === assetId);
                     await navigator.share({
                         title: asset.name,
-                        text: `Check out this amazing ${asset.asset_type} on BASIX Marketplace!`,
+                        text: `Check out this amazing ${asset.asset_type} on IPheron!`,
                         url: `${window.location.origin}?asset=${assetId}`
                     });
                 } catch (error) {
@@ -1960,7 +1960,7 @@
         }
 
         function showHelpModal() {
-            document.getElementById('modalAssetTitle').textContent = 'BASIX Marketplace Help';
+            document.getElementById('modalAssetTitle').textContent = 'IPheron Help';
             document.getElementById('modalAssetContent').innerHTML = `
                 <div style="margin-bottom: 2rem;">
                     <h4>Keyboard Shortcuts</h4>
@@ -2040,7 +2040,7 @@
         };
 
         // API Service Class
-        class BASIXAPIService {
+        class IPheronAPIService {
             constructor() {
                 this.baseURL = API_BASE_URL;
                 this.token = localStorage.getItem('auth_token');
@@ -2449,13 +2449,13 @@
         }
 
         // Initialize services
-        const apiService = new BASIXAPIService();
+        const apiService = new IPheronAPIService();
         const blockchainService = new BlockchainService();
         const realTimeService = new RealTimeService();
         const aiService = new AIService(apiService);
 
         // Enhanced UI Controller
-        class BASIXUIController {
+        class IPheronUIController {
             constructor() {
                 this.currentUser = null;
                 this.assets = [];
@@ -2748,7 +2748,7 @@
         }
 
         // Initialize UI Controller
-        const uiController = new BASIXUIController();
+        const uiController = new IPheronUIController();
 
         // Enhanced notification system
         function showNotification(message, type = 'info', duration = 5000) {
@@ -2808,7 +2808,7 @@
 
         // Initialize everything when DOM is loaded
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('BASIX IP-Marketplace initialized');
+            console.log('IPheron initialized');
             
             // Check for existing session
             const token = localStorage.getItem('auth_token');
