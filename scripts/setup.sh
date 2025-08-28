@@ -1,6 +1,5 @@
-#!/bin/bash
 
-# BASIX IP-Marketplace Setup Script
+# IPheron Setup Script
 # Comprehensive installation and configuration script
 
 set -e  # Exit on any error
@@ -30,7 +29,7 @@ log_error() {
 }
 
 # Configuration
-PROJECT_NAME="BASIX IP-Marketplace"
+PROJECT_NAME="IPheron"
 BACKEND_DIR="backend"
 FRONTEND_DIR="frontend"
 METTA_DIR="metta"
@@ -321,7 +320,7 @@ EOF
 display_summary() {
     log_success "Setup completed successfully!"
     echo
-    echo "=== BASIX IP-Marketplace Setup Summary ==="
+    echo "=== IPheron Setup Summary ==="
     echo
     echo "Project Structure:"
     echo "  Backend: $BACKEND_DIR/"
