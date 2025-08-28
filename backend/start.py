@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-BASIX IP-Marketplace: Startup Script
+IPheron: Startup Script
 Comprehensive startup script for the marketplace application
 """
 
@@ -19,8 +19,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-class BASIXMarketplace:
-    """BASIX Marketplace startup and management class"""
+class IPheronMarketplace:
+    """IPheron Marketplace startup and management class"""
     
     def __init__(self):
         self.processes = []
@@ -176,7 +176,7 @@ class BASIXMarketplace:
     
     def start_all_services(self, mode='development'):
         """Start all marketplace services"""
-        logger.info("Starting BASIX IP-Marketplace services...")
+        logger.info("Starting IPheron services...")
         
         # Check environment and dependencies
         if not self.check_environment():
@@ -236,7 +236,7 @@ class BASIXMarketplace:
         
         try:
             if self.start_all_services(mode):
-                logger.info("BASIX IP-Marketplace is running!")
+                logger.info("IPheron is running!")
                 logger.info("API available at: http://localhost:5000")
                 logger.info("Health check: http://localhost:5000/health")
                 logger.info("API docs: http://localhost:5000/api/docs")
@@ -268,7 +268,7 @@ def main():
     """Main entry point"""
     import argparse
     
-    parser = argparse.ArgumentParser(description='BASIX IP-Marketplace Startup Script')
+    parser = argparse.ArgumentParser(description='IPheron Startup Script')
     parser.add_argument(
         '--mode',
         choices=['development', 'production'],
@@ -283,7 +283,7 @@ def main():
     
     args = parser.parse_args()
     
-    marketplace = BASIXMarketplace()
+    marketplace = IPheronMarketplace()
     
     if args.check_only:
         logger.info("Running environment checks only...")
