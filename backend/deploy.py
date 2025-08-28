@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
 """
-BASIX IP-Marketplace: Deployment Script
+IPheron: Deployment Script
 Comprehensive deployment script for production environments
 """
 
@@ -18,8 +17,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-class BASIXDeployer:
-    """BASIX Marketplace deployment class"""
+class IPheronDeployer:
+    """IPheron Marketplace deployment class"""
     
     def __init__(self, environment='production'):
         self.environment = environment
@@ -166,7 +165,7 @@ class BASIXDeployer:
         logger.info("Creating systemd service...")
         
         service_content = f"""[Unit]
-Description=BASIX IP-Marketplace
+        Description=IPheron
 After=network.target
 
 [Service]
@@ -187,7 +186,7 @@ RestartSec=10
 WantedBy=multi-user.target
 """
         
-        service_file = Path("/etc/systemd/system/basix-marketplace.service")
+        service_file = Path("/etc/systemd/system/ipheron.service")
         
         try:
             # Write service file (requires sudo)
@@ -196,7 +195,7 @@ WantedBy=multi-user.target
             
             # Reload systemd and enable service
             subprocess.run(["sudo", "systemctl", "daemon-reload"], check=True)
-            subprocess.run(["sudo", "systemctl", "enable", "basix-marketplace"], check=True)
+            subprocess.run(["sudo", "systemctl", "enable", "ipheron"], check=True)
             
             logger.info("Systemd service created and enabled")
             return True
@@ -235,7 +234,7 @@ WantedBy=multi-user.target
 }}
 """
         
-        nginx_file = Path("/etc/nginx/sites-available/basix-marketplace")
+        nginx_file = Path("/etc/nginx/sites-available/ipheron")
         
         try:
             # Write nginx config (requires sudo)
@@ -299,7 +298,7 @@ WantedBy=multi-user.target
         
         try:
             if self.environment == 'production':
-                subprocess.run(["sudo", "systemctl", "start", "basix-marketplace"], check=True)
+                subprocess.run(["sudo", "systemctl", "start", "ipheron"], check=True)
                 logger.info("Production services started")
             else:
                 # For development, use the startup script
@@ -316,7 +315,7 @@ WantedBy=multi-user.target
         
         try:
             if self.environment == 'production':
-                subprocess.run(["sudo", "systemctl", "stop", "basix-marketplace"], check=True)
+                subprocess.run(["sudo", "systemctl", "stop", "ipheron"], check=True)
                 logger.info("Production services stopped")
             else:
                 # For development, send SIGTERM to the startup script
@@ -329,7 +328,7 @@ WantedBy=multi-user.target
 
 def main():
     """Main entry point"""
-    parser = argparse.ArgumentParser(description='BASIX IP-Marketplace Deployment Script')
+    parser = argparse.ArgumentParser(description='IPheron Deployment Script')
     parser.add_argument(
         '--environment',
         choices=['development', 'staging', 'production'],
@@ -355,7 +354,7 @@ def main():
     
     args = parser.parse_args()
     
-    deployer = BASIXDeployer(args.environment)
+    deployer = IPheronDeployer(args.environment)
     
     if args.action == 'deploy':
         success = deployer.deploy(skip_tests=args.skip_tests, skip_frontend=args.skip_frontend)
