@@ -1,10 +1,10 @@
-# BASIX IP-Marketplace
+# IPheron
 
 A comprehensive, AI-powered IP marketplace platform built with Flask, MeTTa symbolic AI, and blockchain integration.
 
 ## 🚀 Overview
 
-BASIX IP-Marketplace is a next-generation platform for trading intellectual property assets including NFTs, Phygital assets, Digital content, and Real World Assets. The platform leverages advanced AI algorithms, symbolic reasoning through MeTTa, and blockchain technology to provide a secure, transparent, and intelligent marketplace experience.
+IPheron is a next-generation platform for trading intellectual property assets including NFTs, Phygital assets, Digital content, and Real World Assets. The platform leverages advanced AI algorithms, symbolic reasoning through MeTTa, and blockchain technology to provide a secure, transparent, and intelligent marketplace experience.
 
 ## ✨ Key Features
 
@@ -41,7 +41,7 @@ BASIX IP-Marketplace is a next-generation platform for trading intellectual prop
 ## 🏗️ Architecture
 
 ```
-BASIX IP-Marketplace/
+IPheron/
 ├── backend/                 # Flask API backend
 │   ├── routes/             # API route handlers (blueprints)
 │   │   ├── auth.py         # Authentication routes
@@ -110,8 +110,8 @@ BASIX IP-Marketplace/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-org/basix-marketplace.git
-   cd basix-marketplace
+   git clone https://github.com/Tweenwrld/basix-marketplace
+cd ipheron
    ```
 
 2. **Set up the backend**
@@ -217,7 +217,7 @@ GET /api/docs                # API documentation
 ### Environment Variables
 ```bash
 # Database
-DATABASE_URL=postgresql://user:pass@neon-host:port/db?sslmode=require
+DATABASE_URL=postgresql://user:pass@neon-host:port/ipheron?sslmode=require
 
 # Redis
 REDIS_URL=rediss://:password@upstash-host:port
@@ -378,6 +378,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Flask community for web framework
 - All contributors and supporters
 
+## 📋 Project Documentation
+
+- **[Project Statement](PROJECT_STATEMENT.md)**: Comprehensive project overview, technical implementation, and evaluation criteria
+- **[Quick Start Guide](QUICKSTART.md)**: Get up and running in 5 minutes
+- **[Architecture Guide](ARCHITECTURE.md)**: Technical architecture and design decisions
+- **[API Documentation](http://localhost:5000/api/docs)**: Complete API reference
+
 ## 📞 Support
 
 - **Documentation**: [docs.basix-marketplace.com](https://docs.basix-marketplace.com)
@@ -399,4 +406,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Built with ❤️ by the BASIX team** 
+**Built with ❤️ by the IPheron team** 
