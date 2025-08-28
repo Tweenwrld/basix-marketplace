@@ -1,5 +1,5 @@
 """
-BASIX IP-Marketplace: Configuration Management
+IPSON IP-Marketplace: Configuration Management
 Comprehensive configuration for all marketplace components
 """
 
@@ -42,7 +42,7 @@ class Config:
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mp3', 'pdf', 'json'}
     
     # Marketplace configuration
-    MARKETPLACE_NAME = "BASIX IP-Marketplace"
+    MARKETPLACE_NAME = "IPSON IP-Marketplace"
     MARKETPLACE_VERSION = "1.0.0"
     SUPPORTED_ASSET_TYPES = ['NFT', 'Phygital', 'Digital', 'RealWorldAsset']
     SUPPORTED_REGIONS = ['Mumbai', 'Delhi', 'Bangalore', 'Global', 'International']
