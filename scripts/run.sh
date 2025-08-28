@@ -1,6 +1,5 @@
 
-# BASIX IP-Marketplace: Comprehensive Startup Script
-# Senior-level deployment and management script
+# IPheron: Comprehensive Startup Script
 
 set -e  # Exit on any error
 
@@ -37,7 +36,7 @@ VENV_NAME="venv"
 PYTHON_VERSION="3.12"
 
 # Environment variables (update these with your actual values)
-export DATABASE_URL="${DATABASE_URL:-postgresql://user:pass@localhost:5432/basix_marketplace}"
+export DATABASE_URL="${DATABASE_URL:-postgresql://user:pass@localhost:5432/ipheron}"
 export REDIS_URL="${REDIS_URL:-redis://localhost:6379/0}"
 export SECRET_KEY="${SECRET_KEY:-your-secret-key-change-in-production}"
 export JWT_SECRET_KEY="${JWT_SECRET_KEY:-your-jwt-secret-change-in-production}"
@@ -426,7 +425,7 @@ run_tests() {
 
 # Function to show help
 show_help() {
-    echo "BASIX IP-Marketplace Management Script"
+    echo "IPheron Management Script"
     echo ""
     echo "Usage: $0 [COMMAND] [OPTIONS]"
     echo ""
@@ -462,7 +461,7 @@ main() {
     
     case $command in
         start)
-            log_info "Starting BASIX IP-Marketplace..."
+            log_info "Starting IPheron..."
             
             # Check prerequisites
             check_python_version || exit 1
@@ -485,7 +484,7 @@ main() {
             # Check health
             check_health
             
-            log_success "BASIX IP-Marketplace started successfully!"
+            log_success "IPheron started successfully!"
             log_info "Backend API: http://localhost:5000"
             log_info "Health check: http://localhost:5000/health"
             log_info "API docs: http://localhost:5000/api/docs"
@@ -515,7 +514,7 @@ main() {
             ;;
         
         setup)
-            log_info "Setting up BASIX IP-Marketplace..."
+            log_info "Setting up IPheron..."
             
             check_python_version || exit 1
             create_virtual_environment || exit 1
