@@ -175,7 +175,7 @@ WorkingDirectory={self.base_dir}
 Environment=PATH={self.venv_path}/bin
 Environment=FLASK_ENV=production
 Environment=DATABASE_URL={os.getenv('DATABASE_URL')}
-Environment=REDIS_URL={os.getenv('REDIS_URL')}
+Environment=UPSTASH_REDIS_REST_URL={os.getenv('UPSTASH_REDIS_REST_URL')}
 Environment=SECRET_KEY={os.getenv('SECRET_KEY')}
 Environment=JWT_SECRET_KEY={os.getenv('JWT_SECRET_KEY')}
 ExecStart={self.venv_path}/bin/gunicorn -w 4 -b 0.0.0.0:5000 main:app
